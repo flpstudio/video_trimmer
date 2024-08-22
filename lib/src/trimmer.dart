@@ -330,6 +330,51 @@ class Trimmer {
       await File(trimmedPath!).copy(outputPath);
       onSave(outputPath);
     }
+
+    String trimLengthCommand =
+        ' -ss $startPoint -i "$videoPath" -t ${endPoint - startPoint} -avoid_negative_ts auto ';
+
+    if (ffmpegCommand == null) {
+      command = '$trimLengthCommand -c:a copy ';
+
+      if (!applyVideoEncoding) {
+        command += '-c:v copy ';
+      }
+
+      if (outputFormat == FileFormat.gif) {
+        fpsGIF ??= 10;
+        scaleGIF ??= 480;
+        command =
+            '$trimLengthCommand -vf "fps=$fpsGIF,scale=$scaleGIF:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 ';
+      }
+    } else {
+      command = '$trimLengthCommand $ffmpegCommand ';
+      outputFormatString = customVideoFormat;
+    }
+
+    outputPath = '$path$videoFileName$outputFormatString';
+
+    command += '"$outputPath"';
+
+    FFmpegKit.executeAsync(command, (session) async {
+      final state =
+          FFmpegKitConfig.sessionStateToString(await session.getState());
+      final returnCode = await session.getReturnCode();
+
+      debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+
+      if (ReturnCode.isSuccess(returnCode)) {
+        debugPrint("FFmpeg processing completed successfully.");
+        debugPrint('Video successfully saved');
+        onSave(outputPath);
+      } else {
+        debugPrint("FFmpeg processing failed.");
+        debugPrint('Couldn\'t save the video');
+        onSave(null);
+      }
+    });
+
+    // return _outputPath;
   }
 
   /// For getting the video controller state, to know whether the
