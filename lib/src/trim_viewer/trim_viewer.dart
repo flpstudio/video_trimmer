@@ -171,7 +171,7 @@ class TrimViewer extends StatefulWidget {
   /// know when all the thumbnails are loaded.
   ///
   const TrimViewer({
-    Key? key,
+    super.key,
     required this.trimmer,
     this.maxVideoLength = const Duration(milliseconds: 0),
     this.type = ViewerType.auto,
@@ -187,7 +187,7 @@ class TrimViewer extends StatefulWidget {
     this.editorProperties = const TrimEditorProperties(),
     this.areaProperties = const TrimAreaProperties(),
     this.onThumbnailLoadingComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<TrimViewer> createState() => _TrimViewerState();
